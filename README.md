@@ -1,3 +1,6 @@
+[![Java CI with Maven](https://github.com/Maritims/velocity-sass-maven-plugin/actions/workflows/maven.yml/badge.svg)](https://github.com/Maritims/velocity-sass-maven-plugin/actions/workflows/maven.yml)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.maritims/velocity-sass-maven-plugin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.maritims/velocity-sass-maven-plugin)
+
 # velocity-sass-maven-plugin
 Maven plugin for running compiling SCSS written in Velocity files into CSS.
 
@@ -17,7 +20,7 @@ Add the plugin configuration to the pom.xml in your Maven project:
         <plugin>
             <groupId>io.github.maritims</groupId>
             <artifactId>velocity-sass-maven-plugin</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
             <configuration/>
             <executions>
                 <execution>
