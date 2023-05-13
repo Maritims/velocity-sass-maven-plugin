@@ -1,0 +1,10 @@
+<style lang="scss">
+    .base-element {
+        background-color: black;
+    }
+
+    .child-element {
+        @extend .base-element;
+        color: white;
+    }
+</style>
