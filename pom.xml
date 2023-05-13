@@ -4,7 +4,7 @@
   <groupId>io.github.maritims</groupId>
   <artifactId>velocity-sass-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
-  <version>1.1</version>
+  <version>1.2-SNAPSHOT</version>
 
   <name>${project.artifactId}</name>
   <description>A Maven plugin for compiling SCSS in Velocity files into CSS.</description>
@@ -40,7 +40,7 @@
     <connection>scm:git:${project.scm.url}</connection>
     <developerConnection>scm:git:${project.scm.url}</developerConnection>
     <url>git@github.com:maritims/${project.artifactId}</url>
-    <tag>velocity-sass-maven-plugin-1.1</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
