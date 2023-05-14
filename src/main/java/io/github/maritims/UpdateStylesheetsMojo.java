@@ -19,7 +19,7 @@ public class UpdateStylesheetsMojo extends AbstractStylesheetsMojo {
 
         for(File file : files) {
             if(!file.getName().endsWith(".vm")) {
-                log.warn("Unexpected file in source directory: " + file.getName() + ". Skipping file");
+                log.warn("Unexpected file in source directory: " + file.toPath() + ". Skipping file");
                 continue;
             }
 

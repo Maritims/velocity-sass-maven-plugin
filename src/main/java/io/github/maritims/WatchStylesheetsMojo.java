@@ -2,22 +2,42 @@ package io.github.maritims;
 
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.CRC32;
 
 @Mojo(name = "watch")
 public class WatchStylesheetsMojo extends AbstractStylesheetsMojo {
     private final Log log = getLog();
 
-    protected WatchService watch(Path path) throws IOException {
+    @Parameter(defaultValue = "false")
+    private boolean onlyRecompileOnActualChange;
+
+    private final Map<String, Long> crcHashes = new HashMap<>();
+
+    protected WatchService watch(Path path, boolean onlyRecompileOnActualChange) throws IOException {
         if(!path.toFile().exists()) {
             log.error("Unable to watch path " + path + " for changes. The directory does not exist");
             return null;
+        }
+
+        if(onlyRecompileOnActualChange) {
+            File[] files = path.toFile().listFiles(File::isFile);
+            if (files != null) {
+                for (File file : files) {
+                    CRC32 crc = new CRC32();
+                    crc.update(Files.readAllBytes(file.toPath()));
+                    crcHashes.put(file.getName(), crc.getValue());
+                }
+            }
         }
 
         WatchService watcher = FileSystems.getDefault().newWatchService();
@@ -29,7 +49,7 @@ public class WatchStylesheetsMojo extends AbstractStylesheetsMojo {
     public void execute() {
         WatchService watcher;
         try {
-            watcher = watch(Paths.get(targetPath));
+            watcher = watch(Paths.get(targetPath), onlyRecompileOnActualChange);
         } catch(FileNotFoundException e) {
             log.error("Unable to configure watcher. Directory " + targetPath + " does not exist");
             return;
@@ -40,12 +60,30 @@ public class WatchStylesheetsMojo extends AbstractStylesheetsMojo {
 
         boolean keepPolling = true;
         while (keepPolling) {
-            keepPolling = compileScss(watcher);
+            keepPolling = compileScss(watcher, onlyRecompileOnActualChange);
         }
     }
 
+    protected boolean isFileModified(Path filePath, boolean onlyRecompileOnActualChange) {
+        if(!onlyRecompileOnActualChange) {
+            return true;
+        }
+
+        String content;
+        try {
+            content = String.join("", Files.readAllLines(filePath, StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            log.error("Unable to get CRC hash for file " + filePath + ". Assuming file has been modified as the watcher notified us about a modification", e);
+            return true;
+        }
+
+        CRC32 crc = new CRC32();
+        crc.update(content.getBytes());
+        return crcHashes.get(filePath.getFileName().toString()) != crc.getValue();
+    }
+
     @SuppressWarnings("unchecked")
-    protected boolean compileScss(WatchService watcher) {
+    protected boolean compileScss(WatchService watcher, boolean onlyRecompileOnActualChange) {
         if(watcher == null) {
             log.error("Watcher is not configured. Unable to identify files for SCSS compilation");
             return false;
@@ -62,31 +100,22 @@ public class WatchStylesheetsMojo extends AbstractStylesheetsMojo {
         List<WatchEvent<?>> events = key.pollEvents();
         Map<String, Boolean> compilationResults = new HashMap<>();
         for (WatchEvent<?> event : events) {
-            WatchEvent.Kind<Path> kind = (WatchEvent.Kind<Path>) event.kind();
             Path dir = (Path) key.watchable();
             Path filePath = dir.resolve(((WatchEvent<Path>) event).context());
 
-            String action;
             boolean compile = false;
             if(event.kind().equals(StandardWatchEventKinds.ENTRY_CREATE)) {
-                action = "Added";
                 compile = true;
             } else if(event.kind().equals(StandardWatchEventKinds.ENTRY_MODIFY)) {
-                action = "Modified";
-                compile = true;
-            } else if(event.kind().equals(StandardWatchEventKinds.ENTRY_DELETE)) {
-                action = "Deleted";
-            } else {
-                action = "Overflowed";
+                compile = isFileModified(filePath, onlyRecompileOnActualChange);
             }
-            log.info(action + ": " + filePath);
 
             if(compile) {
                 compilationResults.put(filePath.toString(), compileScss(filePath.toFile()));
             }
         }
 
-        return compilationResults.values()
+        return compilationResults.size() > 0 && compilationResults.values()
                 .stream()
                 .allMatch(success -> success);
     }

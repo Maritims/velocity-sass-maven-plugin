@@ -34,10 +34,21 @@ Add the plugin configuration to the pom.xml in your Maven project:
 </build>
 ```
 
-## Options
+## Goals
+
+### update-stylesheets
+Compile all stylesheets in targetPath during the install phase. Can be run manually with the command `mvn velocity-sass:update-stylesheets`.
+
+#### Options
 | Option     | Type    | Default value                                                      | Explanation                                       |
 |------------|---------|--------------------------------------------------------------------|---------------------------------------------------|
 | targetPath | string  | target/${project.artifactId}/WEB-INF/templates/includes/stylesheet | Path to directory with Velocity files to compile. |
 
-## Run manually
-`mvn velocity-sass:update-stylesheets`
+### watch
+Watch targetPath for additions, modifications or deletions. Usually used during development. Can be run manually with the command `mvn velocity-sass:watch`.
+
+#### Options
+| Option                      | Type    | Default value                                                      | Explanation                                                                                                                                                                                                   |
+|-----------------------------|---------|--------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| targetPath                  | string  | target/${project.artifactId}/WEB-INF/templates/includes/stylesheet | Path to directory with Velocity files to compile.                                                                                                                                                             |
+| onlyRecompileOnActualChange | boolean | false                                                              | When true a hashmap is constructed with CRC32 hashes of all files in targetPath. A rehash is done when a file change is detected and a comparison is performed to determine if there's been an actual change. |

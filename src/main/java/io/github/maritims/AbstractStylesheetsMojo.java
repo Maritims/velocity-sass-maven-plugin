@@ -33,16 +33,16 @@ public abstract class AbstractStylesheetsMojo extends AbstractMojo {
         try {
             document = Jsoup.parse(file, StandardCharsets.UTF_8.toString(), "", Parser.xmlParser());
         } catch(FileNotFoundException e) {
-            log.error("Unable to parse file " + file.getName() + ". File does not exist.");
+            log.error("Unable to parse file " + file.toPath() + ". File does not exist.");
             return false;
         } catch (IOException e) {
-            log.error("Unable to parse file " + file.getName(), e);
+            log.error("Unable to parse file " + file.toPath(), e);
             return false;
         }
 
         Element styleElement = document.getElementsByTag("style").first();
         if (styleElement == null) {
-            log.error("No style element present in file " + file.getName());
+            log.error("No style element present in file " + file.toPath());
             return false;
         }
 
@@ -57,11 +57,11 @@ public abstract class AbstractStylesheetsMojo extends AbstractMojo {
         try {
             Files.write(file.toPath(), document.outerHtml().getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            log.error("Unable to write document to file " + file.getName(), e);
+            log.error("Unable to write document to file " + file.toPath(), e);
             return false;
         }
 
-        log.info("Compiled: " + file.getName());
+        log.info("Compiled: " + file.toPath());
         return true;
     }
 }
